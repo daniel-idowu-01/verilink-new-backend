@@ -66,6 +66,7 @@ app.use(helmet());
 // app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.set('trust proxy', true);
 
 // Add a simple health check route
 app.get("/health", (req, res) => {

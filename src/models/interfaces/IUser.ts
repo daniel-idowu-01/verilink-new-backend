@@ -27,6 +27,8 @@ export interface IUser extends Document, IAuditable {
   roles: UserRole[];
   status: UserStatus;
   vendorId?: Schema.Types.ObjectId;
+  ip?: string;
+  userAgent?: string;
 
   // Security fields
   loginAttempts: number;

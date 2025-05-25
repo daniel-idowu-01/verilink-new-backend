@@ -63,6 +63,29 @@ const userSchema = new Schema<IUser>(
       type: Schema.Types.ObjectId,
       ref: "Vendor",
     },
+    ip: {
+      type: String,
+      // validate: {
+      //   validator: function (v: string) {
+      //     return (
+      //       !v ||
+      //       /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+      //         v
+      //       )
+      //     );
+      //   },
+      //   message: "IP address must be valid",
+      // },
+    },
+    userAgent: {
+      type: String,
+      // validate: {
+      //   validator: function (v: string) {
+      //     return !v || v.length <= 255;
+      //   },
+      //   message: "User agent must be less than 255 characters",
+      // },
+    },
 
     // Security fields
     loginAttempts: {

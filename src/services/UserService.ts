@@ -31,14 +31,16 @@ export class UserService {
     }
   }
 
-  async getUserByEmail(email: string, signUp: boolean): Promise<any> {
+  async getUserByEmail(email: string, isSignUp: boolean): Promise<any> {
     try {
       const user = await User.findOne({ email });
-      if (!user && !signUp) {
+      if (!user && !isSignUp) {
         logger.warn("User not found: " + email);
         throw new NotFoundError("User not found");
       }
-      logger.info("User retrieved successfully: " + (user ? user._id : 'not found'));
+      logger.info(
+        user ? "User retrieved successfully: " + user._id : "SIGNUP: User not found"
+      );
       return user;
     } catch (error) {
       logger.error("Error retrieving user: " + error);

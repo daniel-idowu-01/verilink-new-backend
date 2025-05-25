@@ -17,6 +17,8 @@ export class AuthController {
     try {
       logger.info("Registering user with email: " + req.body.email);
       const { email, password, firstName, lastName, phone } = req.body;
+      const ip = req.ip || "unknown";
+      const userAgent = req.get("User-Agent");
 
       const user = await UserService.getUserByEmail(email, true);
 
@@ -30,6 +32,8 @@ export class AuthController {
         firstName,
         lastName,
         phone,
+        ip,
+        userAgent,
       });
 
       if (!newUser) {
@@ -47,7 +51,7 @@ export class AuthController {
             phone: newUser.phone,
           },
         },
-        "User registered successfully"
+        "User registered successfully. Please check your email for verification."
       );
     } catch (error) {
       next(error);

@@ -7,6 +7,7 @@ import helmet from "helmet";
 import express from "express";
 import mongoose from "mongoose";
 
+import routes from "./routes";
 import logger from "./utils/logger";
 import { config } from "./config/config";
 import { requestLogger, errorLogger } from "./middlewares/requestLogger";
@@ -81,7 +82,7 @@ app.use(requestLogger);
 
 // Routes - Wrap in try/catch to catch any import errors
 try {
-  // app.use("/api/v1", v1Routes);
+  app.use("/api/v1", routes);
 } catch (error) {
   logger.error("Error setting up routes:", error);
   console.error("Error setting up routes:", error);

@@ -7,8 +7,10 @@ import helmet from "helmet";
 import express from "express";
 import mongoose from "mongoose";
 
-import { config } from "./config/config";
 import logger from "./utils/logger";
+import { config } from "./config/config";
+import { requestLogger, errorLogger } from "./middlewares/requestLogger";
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 
 // Load environment variables
 dotenv.config();
@@ -75,7 +77,7 @@ app.get("/health", (req, res) => {
 });
 
 // Request logging
-// app.use(requestLogger);
+app.use(requestLogger);
 
 // Routes - Wrap in try/catch to catch any import errors
 try {
@@ -86,13 +88,13 @@ try {
 }
 
 // 404 Handler
-// app.use(notFoundHandler);
+app.use(notFoundHandler);
 
 // Error logging
-// app.use(errorLogger);
+app.use(errorLogger);
 
 // Error handler
-// app.use(errorHandler);
+app.use(errorHandler);
 
 // Start server with proper error handling
 const PORT = config.PORT || 3000;

@@ -18,22 +18,6 @@ export class AuthController {
       logger.info("Registering user with email: " + req.body.email);
       const { email, password, firstName, lastName, phone } = req.body;
 
-      const missingFields = [];
-      if (!email)
-        missingFields.push({ field: "email", message: "Email is required" });
-      if (!password)
-        missingFields.push({
-          field: "password",
-          message: "Password is required",
-        });
-      // if (!firstName) missingFields.push({ field: "firstName", message: "First name is required" });
-      // if (!lastName) missingFields.push({ field: "lastName", message: "Last name is required" });
-      // if (!phone) missingFields.push({ field: "phone", message: "Phone is required" });
-
-      if (missingFields.length > 0) {
-        throw new ValidationError(missingFields);
-      }
-
       const user = await UserService.getUserByEmail(email, true);
 
       if (user) {

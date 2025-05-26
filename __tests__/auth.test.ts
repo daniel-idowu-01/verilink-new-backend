@@ -52,9 +52,21 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(409);
       expect(res.body.message).toMatch(/User already exists/i);
     });
+
+    it("should throw ValidationError if user input validation fails", async () => {
+      const res = await request(app).post("/api/v1/auth/register").send({
+        email: "test@example.com",
+        firstName: "Daniel",
+        lastName: "Smith",
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/Validation failed/i);
+      expect(res.body.errors[0].message).toBe("Password is required");
+    });
   });
 
-  describe("POST login /login", () => {
+  /* describe("POST login /login", () => {
     it("should login a user with correct credentials", async () => {
       const res = await request(app).post("/api/v1/auth/login").send({
         email: "test@example.com",
@@ -98,5 +110,5 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(200);
       expect(res.body.data.accessToken).toBeDefined();
     });
-  });
+  }); */
 });

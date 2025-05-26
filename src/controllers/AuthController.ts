@@ -213,7 +213,22 @@ export class AuthController {
     }
   };
 
-  async logout(req: any, res: any) {}
+  async logout(
+    req: Request & { user?: { id: string } },
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      if (!req.user) {
+        throw new UnauthorizedError("User not authenticated");
+      }
+      logger.info("Logging out user with ID: " + req.user.id);
+      res.clearCookie("accessToken");
+      ApiResponse.success(res, null, "Logout successful");
+    } catch (error) {
+      next(error);
+    }
+  }
 
   async refreshToken(req: any, res: any) {}
 }

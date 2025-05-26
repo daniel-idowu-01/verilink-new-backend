@@ -1,5 +1,5 @@
-import request from "supertest";
 import app from "../src/app";
+import request from "supertest";
 import mongoose from "mongoose";
 import { User } from "../src/models/User";
 
@@ -64,9 +64,25 @@ describe("Auth Routes", () => {
       expect(res.body.message).toMatch(/Validation failed/i);
       expect(res.body.errors[0].message).toBe("Password is required");
     });
+
+    it("should throw InternalServerError if db registration fails", async () => {
+      jest.spyOn(User, 'create').mockRejectedValue(new Error("Database error"));
+
+      const res = await request(app).post("/api/v1/auth/register").send({
+        email: "newuser@example.com",
+        password: "P@ssw0rd",
+        firstName: "Daniel",
+        lastName: "Smith",
+      });
+
+      console.log(2, res.body);
+
+      expect(res.status).toBe(500);
+      expect(res.body.message).toMatch(/Internal server error/i);
+    });
   });
 
-  /* describe("POST login /login", () => {
+  describe("POST login /login", () => {
     it("should login a user with correct credentials", async () => {
       const res = await request(app).post("/api/v1/auth/login").send({
         email: "test@example.com",
@@ -110,5 +126,5 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(200);
       expect(res.body.data.accessToken).toBeDefined();
     });
-  }); */
+  });
 });

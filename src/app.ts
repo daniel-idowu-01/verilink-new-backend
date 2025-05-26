@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import helmet from "helmet";
 import express from "express";
 import mongoose from "mongoose";
+import cookieParser from 'cookie-parser';
 
 import routes from "./routes";
 import logger from "./utils/logger";
@@ -63,6 +64,7 @@ connectDB();
 // Middlewares
 app.use(cors());
 app.use(helmet());
+app.use(cookieParser());
 // app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -97,18 +99,5 @@ app.use(errorLogger);
 
 // Error handler
 app.use(errorHandler);
-
-// Start server with proper error handling
-const PORT = config.PORT || 3000;
-const server = app.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
-});
-
-// Handle server errors
-server.on("error", (error) => {
-  logger.error("Server error:", error);
-  console.error("Server error:", error);
-  process.exit(1);
-});
 
 export default app;

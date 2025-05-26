@@ -52,19 +52,24 @@ export class AuthController {
       }
 
       const verificationToken = newUser.generateEmailVerificationToken();
+      if (config.NODE_ENV !== "production") {
+        logger.info(`Verification token for ${email}: ${verificationToken}`);
+      }
       newUser.lastVerificationEmailSent = new Date();
       await newUser.save();
 
-      await EmailService.sendEmail({
-        from: '"Verilink" <no-reply@verilink.com>',
-        to: email,
-        subject: "Your Email Verification Code",
-        html: `
-                <p>Hello ${firstName},</p>
-                <p>Your email verification code is: <strong>${verificationToken}</strong></p>
-                <p>This code will expire in 10 minutes.</p>
-            `,
-      });
+      if (config.NODE_ENV === "production") {
+        await EmailService.sendEmail({
+          from: '"Verilink" <no-reply@verilink.com>',
+          to: email,
+          subject: "Your Email Verification Code",
+          html: `
+                    <p>Hello ${firstName},</p>
+                    <p>Your email verification code is: <strong>${verificationToken}</strong></p>
+                    <p>This code will expire in 10 minutes.</p>
+                `,
+        });
+      }
 
       ApiResponse.created(
         res,
@@ -123,16 +128,18 @@ export class AuthController {
         user.lastVerificationEmailSent = new Date();
         await user.save();
 
-        await EmailService.sendEmail({
-          from: '"Verilink" <no-reply@verilink.com>',
-          to: email,
-          subject: "Your Email Verification Code",
-          html: `
-                <p>Hello ${user.firstName},</p>
-                <p>Your email verification code is: <strong>${user.emailVerificationToken}</strong></p>
-                <p>This code will expire in 10 minutes.</p>
-            `,
-        });
+        if (config.NODE_ENV === "production") {
+          await EmailService.sendEmail({
+            from: '"Verilink" <no-reply@verilink.com>',
+            to: email,
+            subject: "Your Email Verification Code",
+            html: `
+                    <p>Hello ${user.firstName},</p>
+                    <p>Your email verification code is: <strong>${user.emailVerificationToken}</strong></p>
+                    <p>This code will expire in 10 minutes.</p>
+                `,
+          });
+        }
 
         throw new ConflictError(
           "Email not verified. Please check your email for the verification code."

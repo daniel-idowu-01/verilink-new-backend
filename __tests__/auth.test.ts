@@ -26,7 +26,7 @@ describe("Auth Routes", () => {
     await mongoose.disconnect();
   });
 
-  describe("POST /api/v1/auth/register", () => {
+  describe("POST registerUser /register", () => {
     it("should create a new user", async () => {
       const res = await request(app).post("/api/v1/auth/register").send({
         email: "daniel@gmail.com",
@@ -34,14 +34,27 @@ describe("Auth Routes", () => {
         firstName: "Daniel",
         lastName: "Smith",
       });
+
       expect(res.status).toBe(201);
       expect(res.body.data.user.email).toBe("daniel@gmail.com");
       expect(res.body.data.user.firstName).toBe("Daniel");
       expect(res.body.data.user.lastName).toBe("Smith");
     });
+
+    it("should throw ConflictError if email exists", async () => {
+      const res = await request(app).post("/api/v1/auth/register").send({
+        email: "test@example.com",
+        password: "Password123",
+        firstName: "Daniel",
+        lastName: "Smith",
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.message).toMatch(/User already exists/i);
+    });
   });
 
-  describe("POST /api/v1/auth/login", () => {
+  describe("POST login /login", () => {
     it("should login a user with correct credentials", async () => {
       const res = await request(app).post("/api/v1/auth/login").send({
         email: "test@example.com",
@@ -64,7 +77,7 @@ describe("Auth Routes", () => {
     });
   });
 
-  describe("POST /api/v1/auth/refresh-token", () => {
+  describe("POST refreshToken /refresh-token", () => {
     it("should refresh token for valid refreshToken", async () => {
       const loginRes = await request(app).post("/api/v1/auth/login").send({
         email: "test@example.com",

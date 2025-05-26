@@ -1,14 +1,23 @@
 import logger from "../utils/logger";
-import { UserService } from "../services";
+import { UserService, EmailService } from "../services";
 import { ApiResponse } from "../middlewares/responseHandler";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import {
   ValidationError,
   ConflictError,
+  UnauthorizedError,
+  BadRequestError,
+  NotFoundError,
   InternalServerError,
 } from "../utils/errors";
 
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export class AuthController {
+  // register controller
   register: RequestHandler = async (
     req: Request,
     res: Response,
@@ -40,6 +49,21 @@ export class AuthController {
         throw new InternalServerError("User registration failed");
       }
 
+      const verificationToken = newUser.generateEmailVerificationToken();
+      newUser.lastVerificationEmailSent = new Date();
+      await newUser.save();
+
+      await EmailService.sendEmail({
+        from: '"Verilink" <no-reply@verilink.com>',
+        to: email,
+        subject: "Your Email Verification Code",
+        html: `
+                <p>Hello ${firstName},</p>
+                <p>Your email verification code is: <strong>${verificationToken}</strong></p>
+                <p>This code will expire in 10 minutes.</p>
+            `,
+      });
+
       ApiResponse.created(
         res,
         {
@@ -58,7 +82,140 @@ export class AuthController {
     }
   };
 
-  async login(req: any, res: any) {}
+  // login controller
+  login: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      logger.info("Logging in user with email: " + req.body.email);
+      const { email, password } = req.body;
+      const ip = req.ip || "unknown";
+      const userAgent = req.get("User-Agent");
+
+      const user = await UserService.getUserByEmail(email, false);
+
+      const isPasswordValid = await user.comparePassword(password);
+      if (!isPasswordValid) {
+        await user.incrementLoginAttempts();
+        throw new UnauthorizedError("Invalid credentials");
+      }
+
+      if (!user.isEmailVerified) {
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+        if (
+          user.lastVerificationEmailSent &&
+          user.lastVerificationEmailSent > oneHourAgo
+        ) {
+          throw new ConflictError(
+            "Verification code was already sent recently. Please check your email or wait before requesting another."
+          );
+        }
+
+        user.emailVerificationToken = user.generateEmailVerificationToken();
+        user.emailVerificationTokenExpiresAt = new Date(
+          Date.now() + 10 * 60 * 1000
+        );
+
+        logger.info(
+          `Verification token for ${email}: ${user.emailVerificationToken}`
+        );
+
+        user.lastVerificationEmailSent = new Date();
+        await user.save();
+
+        await EmailService.sendEmail({
+          from: '"Verilink" <no-reply@verilink.com>',
+          to: email,
+          subject: "Your Email Verification Code",
+          html: `
+                <p>Hello ${user.firstName},</p>
+                <p>Your email verification code is: <strong>${user.emailVerificationToken}</strong></p>
+                <p>This code will expire in 10 minutes.</p>
+            `,
+        });
+
+        throw new ConflictError(
+          "Email not verified. Please check your email for the verification code."
+        );
+      }
+
+      const tokens: AuthTokens = {
+        accessToken: user.generateAccessToken(),
+        refreshToken: user.generateRefreshToken(),
+      };
+
+      user.loginAttempts = 0;
+      user.lockUntil = undefined;
+      await user.save();
+
+      res.cookie("accessToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      ApiResponse.success(
+        res,
+        {
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            roles: user.roles,
+            status: user.status,
+            vendorId: user.vendorId,
+          },
+          accessToken: tokens.accessToken,
+        },
+        "Login successful"
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // verify email controller
+  verifyEmail: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { email, verificationToken } = req.body;
+
+      const user = await UserService.getUserByEmail(email, true);
+      if (!user) throw new NotFoundError("User not found");
+
+      if (user.isEmailVerified) {
+        return ApiResponse.success(res, null, "Email already verified.");
+      }
+
+      const now = new Date();
+
+      if (
+        !user.emailVerificationToken ||
+        user.emailVerificationToken !== verificationToken ||
+        !user.emailVerificationTokenExpiresAt ||
+        user.emailVerificationTokenExpiresAt < now
+      ) {
+        throw new BadRequestError("Invalid or expired verification token");
+      }
+
+      user.isEmailVerified = true;
+      user.emailVerificationToken = undefined;
+      user.emailVerificationTokenExpiresAt = undefined;
+      await user.save();
+
+      ApiResponse.success(res, null, "Email verified successfully.");
+    } catch (error) {
+      next(error);
+    }
+  };
 
   async logout(req: any, res: any) {}
 

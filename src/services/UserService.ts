@@ -33,7 +33,7 @@ export class UserService {
 
   async getUserByEmail(email: string, isSignUp: boolean): Promise<any> {
     try {
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email }).select("+password");
       if (!user && !isSignUp) {
         logger.warn("User not found: " + email);
         throw new NotFoundError("User not found");

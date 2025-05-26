@@ -101,13 +101,17 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    lastVerificationEmailSent: {
+      type: Date,
+      default: null,
+    },
     emailVerificationToken: {
       type: String,
-      select: false,
+      // select: false,
     },
-    emailVerificationExpires: {
+    emailVerificationTokenExpiresAt: {
       type: Date,
-      select: false,
+      // select: false,
     },
     passwordResetToken: {
       type: String,
@@ -184,7 +188,7 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 userSchema.methods.generateAccessToken = function (): string {
@@ -211,12 +215,14 @@ userSchema.methods.generateRefreshToken = function (): string {
 };
 
 userSchema.methods.generateEmailVerificationToken = function (): string {
-  const verificationToken = crypto.randomBytes(32).toString("hex");
-  this.emailVerificationToken = crypto
-    .createHash("sha256")
-    .update(verificationToken)
-    .digest("hex");
-  this.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  const verificationToken = Math.floor(1000 + Math.random() * 9000).toString();
+  // this.emailVerificationToken = crypto
+  //   .createHash("sha256")
+  //   .update(verificationToken)
+  //   .digest("hex");
+  this.emailVerificationToken = verificationToken;
+  this.emailVerificationTokenExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
   return verificationToken;
 };
 

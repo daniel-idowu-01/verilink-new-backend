@@ -1,4 +1,5 @@
 import logger from "../utils/logger";
+import { config } from "../config/config";
 import { UserService, EmailService } from "../services";
 import { ApiResponse } from "../middlewares/responseHandler";
 import { Request, Response, NextFunction, RequestHandler } from "express";
@@ -114,15 +115,10 @@ export class AuthController {
           );
         }
 
-        user.emailVerificationToken = user.generateEmailVerificationToken();
-        user.emailVerificationTokenExpiresAt = new Date(
-          Date.now() + 10 * 60 * 1000
-        );
-
-        logger.info(
-          `Verification token for ${email}: ${user.emailVerificationToken}`
-        );
-
+        const verificationToken = user.generateEmailVerificationToken();
+        if (config.NODE_ENV !== "production") {
+          logger.info(`Verification token for ${email}: ${verificationToken}`);
+        }
         user.lastVerificationEmailSent = new Date();
         await user.save();
 

@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { config } from "../config/config";
 import { UserService, EmailService } from "../services";
@@ -147,7 +148,14 @@ export class AuthController {
       user.lockUntil = undefined;
       await user.save();
 
-      res.cookie("accessToken", tokens.refreshToken, {
+      res.cookie("accessToken", tokens.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.cookie("refreshToken", tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -230,5 +238,62 @@ export class AuthController {
     }
   }
 
-  async refreshToken(req: any, res: any) {}
+  async refreshToken(
+    req: Request & { user?: { id: string } },
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const refreshToken =
+        req.cookies?.refreshToken || req.headers["x-refresh-token"];
+      if (!refreshToken) {
+        throw new UnauthorizedError("Refresh token required");
+      }
+
+      if (!req.user) {
+        throw new UnauthorizedError("User not authenticated");
+      }
+
+      const decoded = jwt.verify(refreshToken, config.JWT_REFRESH_SECRET) as {
+        id: string;
+      };
+
+      if (!decoded?.id) {
+        throw new UnauthorizedError("Invalid refresh token");
+      }
+
+      logger.info("Refreshing token for user with ID: " + req.user?.id);
+      const user = await UserService.getUserById(req.user?.id);
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+
+      const tokens: AuthTokens = {
+        accessToken: user.generateAccessToken(),
+        refreshToken: user.generateRefreshToken(),
+      };
+
+      res.cookie("accessToken", tokens.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.cookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      ApiResponse.success(
+        res,
+        { accessToken: tokens.accessToken },
+        "Token refreshed successfully"
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }

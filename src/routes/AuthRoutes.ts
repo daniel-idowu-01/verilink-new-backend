@@ -13,6 +13,7 @@ const authRouter = Router();
 authRouter.post("/register", validate(registerSchema), AuthController.register);
 authRouter.post("/login", validate(loginSchema), AuthController.login);
 authRouter.get("/logout", authMiddleware, AuthController.logout);
+authRouter.get("/refresh-token", authMiddleware, AuthController.refreshToken);
 authRouter.post(
   "/verify-email",
   validate(verifyEmailSchema),

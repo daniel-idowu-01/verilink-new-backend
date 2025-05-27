@@ -14,6 +14,7 @@ authRouter.post("/register", validate(registerSchema), AuthController.register);
 authRouter.post("/login", validate(loginSchema), AuthController.login);
 authRouter.get("/logout", authMiddleware, AuthController.logout);
 authRouter.get("/refresh-token", refreshTokenMiddleware, AuthController.refreshToken);
+authRouter.get("/request-password-reset", authMiddleware, AuthController.requestPasswordReset);
 authRouter.post(
   "/verify-email",
   validate(verifyEmailSchema),

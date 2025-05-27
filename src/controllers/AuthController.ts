@@ -229,11 +229,12 @@ export class AuthController {
     }
   };
 
-  async logout(
+  // logout controller
+  logout: RequestHandler = (
     req: Request & { user?: { id: string } },
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     try {
       if (!req.user) {
         throw new UnauthorizedError("User not authenticated");
@@ -244,13 +245,14 @@ export class AuthController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 
-  async refreshToken(
+  // refresh token controller
+  refreshToken: RequestHandler = async (
     req: Request & { user?: { id: string } },
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     try {
       if (!req.user) {
         throw new UnauthorizedError("User not authenticated");
@@ -277,5 +279,43 @@ export class AuthController {
     } catch (error) {
       next(error);
     }
-  }
+  };
+
+  // request password reset controller
+  requestPasswordReset: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { email } = req.body;
+      logger.info("Requesting password reset for email: " + email);
+
+      const user = await UserService.getUserByEmail(email, false);
+      if (!user || !user.isEmailVerified) {
+        throw new NotFoundError(`User not ${user.isEmailVerified ? "found" : "verified"}`);
+      }
+
+      const resetToken = user.generatePasswordResetToken();
+      await user.save();
+
+      if (config.NODE_ENV === "production") {
+        await EmailService.sendEmail({
+          from: '"Verilink" <info@verilink.com>',
+          to: email,
+          subject: "Password Reset Request",
+          html: `
+                    <p>Hello ${user.firstName},</p>
+                    <p>We received a request to reset your password. Use the following token:</p>
+                    <p><strong>${resetToken}</strong></p>
+                    <p>This token will expire in 10 minutes.</p>
+                `,
+        });
+      }
+
+      ApiResponse.success(res, null, "Password reset token sent to your email");
+    } catch (error) {
+      next(error);
+    }
+  };
 }

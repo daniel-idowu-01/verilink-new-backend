@@ -115,11 +115,11 @@ const userSchema = new Schema<IUser>(
     },
     passwordResetToken: {
       type: String,
-      select: false,
+      // select: false,
     },
-    passwordResetExpires: {
+    passwordResetExpiresAt: {
       type: Date,
-      select: false,
+      // select: false,
     },
     twoFactorSecret: {
       type: String,
@@ -227,12 +227,9 @@ userSchema.methods.generateEmailVerificationToken = function (): string {
 };
 
 userSchema.methods.generatePasswordResetToken = function (): string {
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  this.passwordResetToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  const resetToken = Math.floor(1000 + Math.random() * 9000).toString();
+  this.passwordResetToken = resetToken;
+  this.passwordResetExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
   return resetToken;
 };
 

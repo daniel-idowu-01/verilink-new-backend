@@ -39,7 +39,7 @@ export interface IUser extends Document, IAuditable {
   emailVerificationToken?: string;
   emailVerificationTokenExpiresAt?: Date;
   passwordResetToken?: string;
-  passwordResetExpires?: Date;
+  passwordResetExpiresAt?: Date;
   twoFactorSecret?: string;
   twoFactorEnabled: boolean;
 

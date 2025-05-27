@@ -31,12 +31,22 @@ export const loginSchema = z.object({
 });
 
 export const requestPasswordResetSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z
+    .string({
+      required_error: "Email is required",
+      invalid_type_error: "Email must be a string",
+    })
+    .email("Invalid email address"),
 });
 
 export const resetPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  verificationToken: z.string().min(1, "Verification code is required"),
+  email: z
+    .string({
+      required_error: "Email is required",
+      invalid_type_error: "Email must be a string",
+    })
+    .email("Invalid email address"),
+  resetToken: z.string().min(1, "Reset code is required"),
   newPassword: z
     .string({
       required_error: "Password is required",

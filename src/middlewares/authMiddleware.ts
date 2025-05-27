@@ -53,7 +53,7 @@ export const authMiddleware = async (
     if (error instanceof jwt.TokenExpiredError) {
       next(new UnauthorizedError("Token expired - please refresh"));
     } else {
-      next(new UnauthorizedError("Invalid token"));
+      next();
     }
   }
 };

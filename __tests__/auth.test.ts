@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { User } from "../src/models/User";
 
 describe("Auth Routes", () => {
-  let testUser: any;
+  let testUser: any, accessToken: string;
 
   beforeAll(async () => {
     await mongoose.disconnect();
@@ -18,8 +18,18 @@ describe("Auth Routes", () => {
       isEmailVerified: true,
       emailVerificationToken: "1234",
     });
-
     await testUser.save();
+
+    const resetPasswordUser = new User({
+      email: "mike@example.com",
+      password: "Password123",
+      firstName: "John",
+      lastName: "Doe",
+      isEmailVerified: true,
+      passwordResetToken: "1234",
+      passwordResetExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+    await resetPasswordUser.save();
   });
 
   afterAll(async () => {
@@ -238,18 +248,16 @@ describe("Auth Routes", () => {
         .post("/api/v1/auth/request-password-reset")
         .send({ email: "test@example.com" });
 
-        console.log(1, res.body)
-
       expect(res.status).toBe(200);
-      expect(res.body.message).toMatch(/Password reset email sent/i);
+      expect(res.body.message).toMatch(
+        /Password reset token sent to your email/i
+      );
     });
 
     it("should fail if user does not exist", async () => {
       const res = await request(app)
         .post("/api/v1/auth/request-password-reset")
         .send({ email: "nouser@gmail.com" });
-
-        console.log(2, res.body)
 
       expect(res.status).toBe(404);
       expect(res.body.message).toMatch(/User not found/i);
@@ -261,30 +269,35 @@ describe("Auth Routes", () => {
         .send({});
 
       expect(res.status).toBe(400);
-      expect(res.body.message).toMatch(/Email is required/i);
+      expect(res.body.errors[0].message).toMatch(/Email is required/i);
     });
 
     it("should fail if email format is invalid", async () => {
       const res = await request(app)
         .post("/api/v1/auth/request-password-reset")
         .send({ email: "invalid-email" });
+
       expect(res.status).toBe(400);
-      expect(res.body.message).toMatch(/Invalid email address/i);
+      expect(res.body.errors[0].message).toMatch(/Invalid email address/i);
     });
   });
 
   describe("POST resetPassword /reset-password", () => {
     it("should reset password for existing user", async () => {
+      const loginRes = await request(app).post("/api/v1/auth/login").send({
+        email: "mike@example.com",
+        password: "Password123",
+      });
+
+      accessToken = loginRes.body.data.accessToken;
       const res = await request(app)
         .post("/api/v1/auth/reset-password")
         .send({
-          email: "testUser@example.com",
-          verificationToken: "1234",
+          email: "mike@example.com",
+          resetToken: "1234",
           newPassword: "NewPassword123",
         })
-        .set("Cookie", [
-          `accessToken=${testUser.emailVerificationToken}; HttpOnly; Path=/; Max-Age=3600`,
-        ]);
+        .set("Cookie", accessToken);
 
       expect(res.status).toBe(200);
       expect(res.body.message).toMatch(/Password reset successfully/i);
@@ -294,16 +307,15 @@ describe("Auth Routes", () => {
       const res = await request(app)
         .post("/api/v1/auth/reset-password")
         .send({
-          email: "testUser@example.com",
-          verificationToken: "wrong-token",
+          email: "mike@example.com",
+          resetToken: "wrong-token",
           newPassword: "NewPassword123",
         })
-        .set("Cookie", [
-          `accessToken=${testUser.emailVerificationToken}; HttpOnly; Path=/; Max-Age=3600`,
-        ]);
+        .set("Cookie", accessToken);
+
       expect(res.status).toBe(400);
       expect(res.body.message).toMatch(
-        /Invalid or expired verification token/i
+        /Invalid or expired password reset token/i
       );
     });
 
@@ -311,14 +323,13 @@ describe("Auth Routes", () => {
       const res = await request(app)
         .post("/api/v1/auth/reset-password")
         .send({
-          email: "testUser@example.com",
-          verificationToken: "1234",
+          email: "mike@example.com",
+          resetToken: "1234",
         })
-        .set("Cookie", [
-          `accessToken=${testUser.emailVerificationToken}; HttpOnly; Path=/; Max-Age=3600`,
-        ]);
+        .set("Cookie", accessToken);
+
       expect(res.status).toBe(400);
-      expect(res.body.message).toMatch(/New password is required/i);
+      expect(res.body.errors[0].message).toMatch(/Password is required/i);
     });
   });
 });

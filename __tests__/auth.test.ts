@@ -16,6 +16,7 @@ describe("Auth Routes", () => {
       firstName: "John",
       lastName: "Doe",
       isEmailVerified: true,
+      emailVerificationToken: "1234",
     });
 
     await testUser.save();
@@ -66,7 +67,7 @@ describe("Auth Routes", () => {
     });
 
     it("should throw InternalServerError if db registration fails", async () => {
-      jest.spyOn(User, 'create').mockRejectedValue(new Error("Database error"));
+      jest.spyOn(User, "create").mockRejectedValue(new Error("Database error"));
 
       const res = await request(app).post("/api/v1/auth/register").send({
         email: "newuser@example.com",
@@ -74,8 +75,6 @@ describe("Auth Routes", () => {
         firstName: "Daniel",
         lastName: "Smith",
       });
-
-      console.log(2, res.body);
 
       expect(res.status).toBe(500);
       expect(res.body.message).toMatch(/Internal server error/i);
@@ -103,6 +102,101 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(401);
       expect(res.body.message).toMatch(/Invalid credentials/i);
     });
+
+    it("should fail with unverified email (with recent verification code)", async () => {
+      const newUser = new User({
+        email: "newUser@example.com",
+        password: "Password123",
+        firstName: "John",
+        lastName: "Doe",
+        lastVerificationEmailSent: new Date(),
+      });
+      await newUser.save();
+
+      const res = await request(app).post("/api/v1/auth/login").send({
+        email: "newUser@example.com",
+        password: "Password123",
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.message).toMatch(
+        /Verification code was already sent recently. Please check your email or wait before requesting another./i
+      );
+    });
+
+    it("should fail with unverified email (with outdated verification code)", async () => {
+      const newUser = new User({
+        email: "updatedUser@example.com",
+        password: "Password123",
+        firstName: "John",
+        lastName: "Doe",
+      });
+      await newUser.save();
+
+      const res = await request(app).post("/api/v1/auth/login").send({
+        email: "updatedUser@example.com",
+        password: "Password123",
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.message).toMatch(
+        /Email not verified. Please check your email for the verification code./i
+      );
+    });
+  });
+
+  describe("GET verifyEmail /verify-email", () => {
+    it("should verify user with correct credentials", async () => {
+      const newUser = new User({
+        email: "dee@example.com",
+        password: "Password123",
+        firstName: "John",
+        lastName: "Doe",
+        emailVerificationToken: "7890",
+        emailVerificationTokenExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      });
+      await newUser.save();
+
+      const res = await request(app).post("/api/v1/auth/verify-email").send({
+        email: "dee@example.com",
+        verificationToken: "7890",
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toMatch(/Email verified successfully/i);
+    });
+
+    it("should fail if user is already verified", async () => {
+      const res = await request(app).post("/api/v1/auth/verify-email").send({
+        email: "test@example.com",
+        verificationToken: "1234",
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toMatch(/Email already verified/i);
+    });
+
+    it("should fail if verification code is wrong", async () => {
+      const newUser = new User({
+        email: "dee2@example.com",
+        password: "Password123",
+        firstName: "John",
+        lastName: "Doe",
+        emailVerificationToken: "7890",
+        emailVerificationTokenExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      });
+      await newUser.save();
+
+      const res = await request(app).post("/api/v1/auth/verify-email").send({
+        email: "dee2@example.com",
+        verificationToken: "5678",
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(
+        /Invalid or expired verification token/i
+      );
+    });
   });
 
   describe("POST refreshToken /refresh-token", () => {
@@ -114,14 +208,11 @@ describe("Auth Routes", () => {
       const accessToken = loginRes.body.data.accessToken;
 
       const cookies = loginRes.headers["set-cookie"];
-      console.log("Cookies:", cookies);
 
       const res = await request(app)
         .get("/api/v1/auth/refresh-token")
         .set("Authorization", `Bearer ${accessToken}`)
         .set("Cookie", cookies);
-
-      console.log(123, res.body);
 
       expect(res.status).toBe(200);
       expect(res.body.data.accessToken).toBeDefined();

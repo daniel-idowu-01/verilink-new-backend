@@ -203,7 +203,7 @@ export class AuthController {
       if (!user) throw new NotFoundError("User not found");
 
       if (user.isEmailVerified) {
-        return ApiResponse.success(res, null, "Email already verified.");
+        return ApiResponse.success(res, null, "Email already verified");
       }
 
       const now = new Date();
@@ -222,7 +222,7 @@ export class AuthController {
       user.emailVerificationTokenExpiresAt = undefined;
       await user.save();
 
-      ApiResponse.success(res, null, "Email verified successfully.");
+      ApiResponse.success(res, null, "Email verified successfully");
     } catch (error) {
       next(error);
     }

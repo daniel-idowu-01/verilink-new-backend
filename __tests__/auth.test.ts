@@ -231,4 +231,94 @@ describe("Auth Routes", () => {
       expect(res.body.message).toMatch(/Refresh token required/i);
     });
   });
+
+  describe("POST requestPasswordReset /request-password-reset", () => {
+    it("should request password reset for existing user", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/request-password-reset")
+        .send({ email: "test@example.com" });
+
+        console.log(1, res.body)
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toMatch(/Password reset email sent/i);
+    });
+
+    it("should fail if user does not exist", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/request-password-reset")
+        .send({ email: "nouser@gmail.com" });
+
+        console.log(2, res.body)
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toMatch(/User not found/i);
+    });
+
+    it("should fail if email is not provided", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/request-password-reset")
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/Email is required/i);
+    });
+
+    it("should fail if email format is invalid", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/request-password-reset")
+        .send({ email: "invalid-email" });
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/Invalid email address/i);
+    });
+  });
+
+  describe("POST resetPassword /reset-password", () => {
+    it("should reset password for existing user", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/reset-password")
+        .send({
+          email: "testUser@example.com",
+          verificationToken: "1234",
+          newPassword: "NewPassword123",
+        })
+        .set("Cookie", [
+          `accessToken=${testUser.emailVerificationToken}; HttpOnly; Path=/; Max-Age=3600`,
+        ]);
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toMatch(/Password reset successfully/i);
+    });
+
+    it("should fail if verification token is invalid", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/reset-password")
+        .send({
+          email: "testUser@example.com",
+          verificationToken: "wrong-token",
+          newPassword: "NewPassword123",
+        })
+        .set("Cookie", [
+          `accessToken=${testUser.emailVerificationToken}; HttpOnly; Path=/; Max-Age=3600`,
+        ]);
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(
+        /Invalid or expired verification token/i
+      );
+    });
+
+    it("should fail if new password is not provided", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/reset-password")
+        .send({
+          email: "testUser@example.com",
+          verificationToken: "1234",
+        })
+        .set("Cookie", [
+          `accessToken=${testUser.emailVerificationToken}; HttpOnly; Path=/; Max-Age=3600`,
+        ]);
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/New password is required/i);
+    });
+  });
 });

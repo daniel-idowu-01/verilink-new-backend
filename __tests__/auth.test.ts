@@ -217,5 +217,20 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(200);
       expect(res.body.data.accessToken).toBeDefined();
     });
+
+    it("should fail if refresh token is not provided", async () => {
+      const loginRes = await request(app).post("/api/v1/auth/login").send({
+        email: "test@example.com",
+        password: "Password123",
+      });
+      const accessToken = loginRes.body.data.accessToken;
+
+      const res = await request(app)
+        .get("/api/v1/auth/refresh-token")
+        .set("Authorization", `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toMatch(/Refresh token required/i);
+    });
   });
 });

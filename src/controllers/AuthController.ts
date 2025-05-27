@@ -293,7 +293,9 @@ export class AuthController {
 
       const user = await UserService.getUserByEmail(email, false);
       if (!user || !user.isEmailVerified) {
-        throw new NotFoundError(`User not ${user.isEmailVerified ? "found" : "verified"}`);
+        throw new NotFoundError(
+          `User not ${user.isEmailVerified ? "found" : "verified"}`
+        );
       }
 
       const resetToken = user.generatePasswordResetToken();
@@ -314,6 +316,43 @@ export class AuthController {
       }
 
       ApiResponse.success(res, null, "Password reset token sent to your email");
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // reset password controller
+  resetPassword: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { email, resetToken, newPassword } = req.body;
+      logger.info("Resetting password for email: " + email);
+
+      const user = await UserService.getUserByEmail(email, false);
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+
+      const now = new Date();
+
+      if (
+        !user.passwordResetToken ||
+        user.passwordResetToken !== resetToken ||
+        !user.passwordResetExpiresAt ||
+        user.passwordResetExpiresAt < now
+      ) {
+        throw new BadRequestError("Invalid or expired password reset token");
+      }
+
+      user.password = newPassword;
+      user.passwordResetToken = undefined;
+      user.passwordResetExpiresAt = undefined;
+      await user.save();
+
+      ApiResponse.success(res, null, "Password reset successfully");
     } catch (error) {
       next(error);
     }

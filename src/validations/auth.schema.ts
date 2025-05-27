@@ -23,11 +23,25 @@ export const registerSchema = z.object({
 export const verifyEmailSchema = z.object({
   email: z.string().email("Invalid email address"),
   verificationToken: z.string().min(1, "Verification code is required"),
-})
+});
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export const requestPasswordResetSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  verificationToken: z.string().min(1, "Verification code is required"),
+  newPassword: z
+    .string({
+      required_error: "Password is required",
+    })
+    .min(6, "Password must be at least 8 characters"),
 });
 
 export const refreshTokenSchema = z.object({

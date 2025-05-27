@@ -205,13 +205,11 @@ describe("Auth Routes", () => {
         email: "test@example.com",
         password: "Password123",
       });
-      const accessToken = loginRes.body.data.accessToken;
 
       const cookies = loginRes.headers["set-cookie"];
 
       const res = await request(app)
         .get("/api/v1/auth/refresh-token")
-        .set("Authorization", `Bearer ${accessToken}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);

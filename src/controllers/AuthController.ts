@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { config } from "../config/config";
+import { setSecureCookies } from "../utils/helpers";
 import { UserService, EmailService } from "../services";
 import { ApiResponse } from "../middlewares/responseHandler";
 import { Request, Response, NextFunction, RequestHandler } from "express";
@@ -251,22 +252,8 @@ export class AuthController {
     next: NextFunction
   ) {
     try {
-      const refreshToken =
-        req.cookies?.refreshToken || req.headers["x-refresh-token"];
-      if (!refreshToken) {
-        throw new UnauthorizedError("Refresh token required");
-      }
-
       if (!req.user) {
         throw new UnauthorizedError("User not authenticated");
-      }
-
-      const decoded = jwt.verify(refreshToken, config.JWT_REFRESH_SECRET) as {
-        id: string;
-      };
-
-      if (!decoded?.id) {
-        throw new UnauthorizedError("Invalid refresh token");
       }
 
       logger.info("Refreshing token for user with ID: " + req.user?.id);
@@ -280,19 +267,7 @@ export class AuthController {
         refreshToken: user.generateRefreshToken(),
       };
 
-      res.cookie("accessToken", tokens.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-
-      res.cookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      setSecureCookies(res, tokens);
 
       ApiResponse.success(
         res,

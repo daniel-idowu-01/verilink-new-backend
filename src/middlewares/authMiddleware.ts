@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { config } from "../config/config";
+import { UserService } from "../services";
 import { UserRole, UserStatus } from "../models/interfaces/IUser";
 import { UnauthorizedError, ForbiddenError } from "../utils/errors";
 import { Request, Response, NextFunction, RequestHandler } from "express";
@@ -24,47 +25,62 @@ export const authMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const token = extractToken(req);
-    if (!token) {
-      throw new UnauthorizedError("Access token required!");
+    const accessToken =
+      req.cookies?.accessToken ||
+      (req.headers.authorization?.startsWith("Bearer ")
+        ? req.headers.authorization.split(" ")[1]
+        : null);
+
+    if (!accessToken) {
+      throw new UnauthorizedError("Access token required");
     }
 
-    jwt.verify(token, config.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized: Invalid token",
-        });
-      }
-      req.user = decoded as {
-        id: string;
-        email: string;
-        roles: UserRole[];
-        vendorId?: string;
-        status: UserStatus;
-      };
-      next();
-    });
+    const decoded = jwt.verify(accessToken, config.JWT_SECRET) as {
+      id: string;
+      email: string;
+      roles: UserRole[];
+    };
+
+    req.user = decoded as {
+      id: string;
+      email: string;
+      roles: UserRole[];
+      vendorId?: string;
+      status: UserStatus;
+    };
+    next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      next(new UnauthorizedError("Invalid token"));
-    } else if (error instanceof jwt.TokenExpiredError) {
-      next(new UnauthorizedError("Token expired"));
+    if (error instanceof jwt.TokenExpiredError) {
+      next(new UnauthorizedError("Token expired - please refresh"));
     } else {
-      next(error);
+      next(new UnauthorizedError("Invalid token"));
     }
   }
 };
 
-const extractToken = (req: Request): string | null => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    return authHeader.split(" ")[1];
-  }
+export const refreshTokenMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedError("Refresh token required");
+    }
 
-  // Also check cookies for token
-  const cookieToken = req.cookies?.accessToken;
-  return cookieToken || null;
+    const decoded = jwt.verify(refreshToken, config.JWT_REFRESH_SECRET) as {
+      id: string;
+    };
+    const user = await UserService.getUserById(decoded.id);
+
+    if (!user) throw new UnauthorizedError("User not found");
+
+    req.user = user;
+    next();
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Middleware to check if the user has one of the allowed roles

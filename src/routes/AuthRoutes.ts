@@ -15,7 +15,7 @@ import {
 
 const authRouter = Router();
 
-authRouter.post("/register", validate(registerSchema), AuthController.register);
+authRouter.post("/register", validate(registerSchema), AuthController.registerUser);
 authRouter.post("/login", validate(loginSchema), AuthController.login);
 authRouter.get("/logout", authMiddleware, AuthController.logout);
 authRouter.get(

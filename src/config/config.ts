@@ -1,6 +1,7 @@
 export const config = {
   MONGODB_URI: process.env.MONGODB_URI || "mongodb://localhost:27017/verilink",
   PORT: process.env.PORT || 3000,
+  BASE_URL: process.env.BASE_URL || "http://localhost:3000",
   JWT_SECRET: process.env.JWT_SECRET || "your_jwt_secret",
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "your_jwt_secret",
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",

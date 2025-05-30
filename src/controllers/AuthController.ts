@@ -2,8 +2,8 @@ import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { config } from "../config/config";
 import { setSecureCookies } from "../utils/helpers";
-import { UserService, EmailService } from "../services";
 import { ApiResponse } from "../middlewares/responseHandler";
+import { UserService, EmailService, VendorService } from "../services";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import {
   ValidationError,
@@ -21,7 +21,7 @@ export interface AuthTokens {
 
 export class AuthController {
   // register controller
-  register: RequestHandler = async (
+  registerUser: RequestHandler = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -84,6 +84,85 @@ export class AuthController {
           },
         },
         "User registered successfully. Please check your email for verification."
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  registerVendor: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const {
+        email,
+        password,
+        businessName,
+        businessType,
+        phone,
+        ...vendorData
+      } = req.body;
+      const ip = req.ip || "unknown";
+      const userAgent = req.get("User-Agent") || "";
+
+      const existingUser = await UserService.getUserByEmail(email, true);
+      if (existingUser) {
+        throw new ConflictError("Email already registered");
+      }
+
+      const user = await UserService.createUser({
+        email,
+        password,
+        phone,
+        roles: ["vendor"],
+        ip,
+        userAgent,
+      });
+
+      const vendor = await VendorService.createVendor({
+        userId: user._id,
+        businessName,
+        businessType,
+        registrationNumber: vendorData.registrationNumber,
+        taxId: vendorData.taxId,
+        businessAddress: vendorData.businessAddress,
+        contactPerson: `${user.firstName} ${user.lastName}`,
+      });
+
+      // Initiate KYC
+      // await KYCService.initiateVerification({
+      //   userId: user._id,
+      //   businessRegistrationNumber: vendor.registrationNumber,
+      //   taxId: vendor.taxId
+      // });
+
+      // Send verification email
+      const verificationToken = user.generateEmailVerificationToken();
+      await EmailService.sendVendorWelcomeEmail({
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        businessName: vendor.businessName,
+        verificationToken,
+        kycRequirements: ["CAC certificate", "Tax clearance", "Valid ID"],
+      });
+
+      ApiResponse.created(
+        res,
+        {
+          user: {
+            id: user._id,
+            email: user.email,
+            roles: user.roles,
+          },
+          vendor: {
+            id: vendor._id,
+            businessName: vendor.businessName,
+            status: vendor.verificationStatus,
+          },
+        },
+        "Vendor registration successful - check email for next steps"
       );
     } catch (error) {
       next(error);

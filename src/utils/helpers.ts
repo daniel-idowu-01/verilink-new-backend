@@ -18,3 +18,10 @@ export const setSecureCookies = (res: Response, tokens: AuthTokens) => {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
+
+export const validateCACNumber = (value: string) => {
+  if (!/^RC\d{8}$/.test(value)) {
+    throw new Error("Invalid CAC format. Use RC followed by 8 digits");
+  }
+  return true;
+};

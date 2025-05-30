@@ -7,6 +7,7 @@ import {
 } from "../middlewares/authMiddleware";
 import {
   registerSchema,
+  vendorRegisterSchema,
   loginSchema,
   verifyEmailSchema,
   requestPasswordResetSchema,
@@ -15,7 +16,16 @@ import {
 
 const authRouter = Router();
 
-authRouter.post("/register", validate(registerSchema), AuthController.registerUser);
+authRouter.post(
+  "/register",
+  validate(registerSchema),
+  AuthController.registerUser
+);
+authRouter.post(
+  "/register-vendor",
+  validate(vendorRegisterSchema),
+  AuthController.registerVendor
+);
 authRouter.post("/login", validate(loginSchema), AuthController.login);
 authRouter.get("/logout", authMiddleware, AuthController.logout);
 authRouter.get(

@@ -8,7 +8,7 @@ export interface PaginatedProductsResult {
 
 const productSchema = new Schema<IProduct>(
   {
-    vendorId: { type: String, ref: "Vendor", required: true },
+    vendorId: { type: Schema.Types.ObjectId, ref: "Vendor", required: true },
     name: { type: String, required: true },
     description: { type: String },
     price: { type: Number, required: true },

@@ -1,7 +1,7 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 
 export interface IProduct extends Document {
-  vendorId: string;
+  vendorId: Types.ObjectId;
   productId: string;
   name: string;
   description?: string;

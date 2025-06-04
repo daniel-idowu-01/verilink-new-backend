@@ -5,6 +5,7 @@ const orderItemSchema = new Schema<IOrderItem>(
   {
     productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     quantity: { type: Number, required: true, min: 1 },
+    variant: { type: String },
     priceAtOrder: { type: Number, required: true, min: 0 },
     totalPrice: { type: Number, required: true, min: 0 },
   },
@@ -45,12 +46,17 @@ const orderSchema = new Schema<IOrder>(
       enum: Object.values(OrderStatus),
       default: OrderStatus.PENDING,
     },
-    paymentMethod: { type: String, required: true },
+    paymentMethod: {
+      type: String,
+      required: true,
+      enum: ["cash", "card", "mobile", "split"],
+    },
     paymentStatus: {
       type: String,
       enum: ["pending", "paid", "failed", "refunded"],
       default: "pending",
     },
+    paymentReference: { type: String },
     shippingAddress: {
       street: { type: String, required: true },
       city: { type: String, required: true },

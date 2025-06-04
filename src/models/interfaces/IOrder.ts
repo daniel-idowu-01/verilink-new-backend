@@ -15,6 +15,7 @@ export enum OrderStatus {
 export interface IOrderItem {
   productId: Types.ObjectId | IProduct;
   quantity: number;
+  variant: string;
   priceAtOrder: number;
   totalPrice: number;
 }
@@ -31,6 +32,7 @@ export interface IOrder extends Document {
   status: OrderStatus;
   paymentMethod: string;
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  paymentReference: string;
   shippingAddress: {
     street: string;
     city: string;

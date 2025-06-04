@@ -20,7 +20,9 @@ export interface AuthTokens {
 }
 
 export class AuthController {
+  ////////////////////////////////////
   // register controller
+  ////////////////////////////////////
   registerUser: RequestHandler = async (
     req: Request,
     res: Response,
@@ -90,6 +92,9 @@ export class AuthController {
     }
   };
 
+  ////////////////////////////////////
+  // register vendor controller
+  ////////////////////////////////////
   registerVendor: RequestHandler = async (
     req: Request,
     res: Response,
@@ -169,7 +174,9 @@ export class AuthController {
     }
   };
 
+  ////////////////////////////////////
   // login controller
+  ////////////////////////////////////
   login: RequestHandler = async (
     req: Request,
     res: Response,
@@ -270,7 +277,9 @@ export class AuthController {
     }
   };
 
+  ////////////////////////////////////
   // verify email controller
+  ////////////////////////////////////
   verifyEmail: RequestHandler = async (
     req: Request,
     res: Response,
@@ -308,7 +317,9 @@ export class AuthController {
     }
   };
 
+  ////////////////////////////////////
   // logout controller
+  ////////////////////////////////////
   logout: RequestHandler = (
     req: Request & { user?: { id: string } },
     res: Response,
@@ -326,7 +337,9 @@ export class AuthController {
     }
   };
 
+  ////////////////////////////////////
   // refresh token controller
+  ////////////////////////////////////
   refreshToken: RequestHandler = async (
     req: Request & { user?: { id: string } },
     res: Response,
@@ -360,7 +373,9 @@ export class AuthController {
     }
   };
 
+  ////////////////////////////////////
   // request password reset controller
+  ////////////////////////////////////
   requestPasswordReset: RequestHandler = async (
     req: Request,
     res: Response,
@@ -400,7 +415,9 @@ export class AuthController {
     }
   };
 
+  ////////////////////////////////////
   // reset password controller
+  ////////////////////////////////////
   resetPassword: RequestHandler = async (
     req: Request,
     res: Response,

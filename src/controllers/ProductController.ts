@@ -5,7 +5,9 @@ import { BadRequestError, NotFoundError } from "../utils/errors";
 import logger from "../utils/logger";
 
 export class ProductController {
+  ////////////////////////////////////
   // Get all products with category filtering and search
+  ////////////////////////////////////
   getProducts: RequestHandler = async (
     req: Request,
     res: Response,
@@ -103,7 +105,9 @@ export class ProductController {
     }
   };
 
+  ////////////////////////////////////
   // Get product by ID
+  ////////////////////////////////////
   getProductById: RequestHandler = async (
     req: Request,
     res: Response,
@@ -128,7 +132,9 @@ export class ProductController {
     }
   };
 
+  ////////////////////////////////////
   // Create new product
+  ////////////////////////////////////
   createProduct: RequestHandler = async (
     req: Request,
     res: Response,
@@ -156,7 +162,9 @@ export class ProductController {
     }
   };
 
+  ////////////////////////////////////
   // Update product
+  ////////////////////////////////////
   updateProduct: RequestHandler = async (
     req: Request,
     res: Response,
@@ -184,7 +192,9 @@ export class ProductController {
     }
   };
 
+  ////////////////////////////////////
   // Delete product
+  ////////////////////////////////////
   deleteProduct: RequestHandler = async (
     req: Request,
     res: Response,
@@ -208,7 +218,9 @@ export class ProductController {
     }
   };
 
+  ////////////////////////////////////
   // Toggle product availability
+  ////////////////////////////////////
   toggleAvailability: RequestHandler = async (
     req: Request,
     res: Response,
@@ -247,7 +259,9 @@ export class ProductController {
     }
   };
 
+  ////////////////////////////////////
   // Get product categories with counts
+  ////////////////////////////////////
   getCategories: RequestHandler = async (
     req: Request,
     res: Response,
@@ -302,7 +316,9 @@ export class ProductController {
     }
   };
 
+  ////////////////////////////////////
   // Bulk update products
+  ////////////////////////////////////
   bulkUpdateProducts: RequestHandler = async (
     req: Request,
     res: Response,

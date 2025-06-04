@@ -7,7 +7,9 @@ import { BadRequestError, NotFoundError } from "../utils/errors";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 
 export class OrderController {
+  ////////////////////////////////////
   // Create new order
+  ////////////////////////////////////
   createOrder: RequestHandler = async (
     req: Request,
     res: Response,
@@ -113,7 +115,9 @@ export class OrderController {
     }
   };
 
+  ////////////////////////////////////
   // Get orders with filtering
+  ////////////////////////////////////
   getOrders: RequestHandler = async (
     req: Request,
     res: Response,
@@ -187,7 +191,9 @@ export class OrderController {
     }
   };
 
+  ////////////////////////////////////
   // Get single order
+  ////////////////////////////////////
   getOrderById: RequestHandler = async (
     req: Request,
     res: Response,
@@ -213,7 +219,9 @@ export class OrderController {
     }
   };
 
+  ////////////////////////////////////
   // Update order status
+  ////////////////////////////////////
   updateOrderStatus: RequestHandler = async (
     req: Request,
     res: Response,
@@ -273,7 +281,9 @@ export class OrderController {
     }
   };
 
+  ////////////////////////////////////
   // Update payment status
+  ////////////////////////////////////
   updatePaymentStatus: RequestHandler = async (
     req: Request,
     res: Response,
@@ -313,7 +323,9 @@ export class OrderController {
     }
   };
 
+  ////////////////////////////////////
   // Get order statistics
+  ////////////////////////////////////
   getOrderStats: RequestHandler = async (
     req: Request,
     res: Response,
@@ -414,7 +426,9 @@ export class OrderController {
     }
   };
 
+  ////////////////////////////////////
   // Cancel order
+  ////////////////////////////////////
   cancelOrder: RequestHandler = async (
     req: Request,
     res: Response,

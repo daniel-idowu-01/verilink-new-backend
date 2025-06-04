@@ -142,10 +142,6 @@ export class OrderController {
         query.status = status;
       }
 
-      if (dineOption) {
-        query.dineOption = dineOption;
-      }
-
       if (date) {
         const startDate = new Date(date as string);
         const endDate = new Date(startDate);
@@ -165,8 +161,6 @@ export class OrderController {
       const [orders, total] = await Promise.all([
         Order.find(query)
           .populate("items.productId", "name imageUrl")
-          .populate("takenBy", "firstName lastName")
-          .populate("servedBy", "firstName lastName")
           .sort(sortOption)
           .skip(skip)
           .limit(Number(limit))

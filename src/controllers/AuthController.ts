@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { config } from "../config/config";
 import { setSecureCookies } from "../utils/helpers";

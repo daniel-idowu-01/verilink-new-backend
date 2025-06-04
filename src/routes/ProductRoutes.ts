@@ -1,19 +1,8 @@
 import { Router } from "express";
 import { ProductController } from "../controllers";
 import { validate } from "../middlewares/validate";
-import {
-  authMiddleware,
-  refreshTokenMiddleware,
-} from "../middlewares/authMiddleware";
+import { authMiddleware } from "../middlewares/authMiddleware";
 import { validateVendorAccess } from "../middlewares/vendorMiddleware";
-import {
-  registerSchema,
-  vendorRegisterSchema,
-  loginSchema,
-  verifyEmailSchema,
-  requestPasswordResetSchema,
-  resetPasswordSchema,
-} from "../validations/auth.schema";
 
 const productRouter = Router();
 

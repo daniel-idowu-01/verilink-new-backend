@@ -1,9 +1,7 @@
 import { Router } from "express";
 import { OrderController } from "../controllers";
 import { validate } from "../middlewares/validate";
-import {
-  authMiddleware,
-} from "../middlewares/authMiddleware";
+import { authMiddleware } from "../middlewares/authMiddleware";
 import { validateVendorAccess } from "../middlewares/vendorMiddleware";
 
 const orderRouter = Router();

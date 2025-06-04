@@ -13,7 +13,7 @@ export class ProductController {
   ) => {
     try {
       const {
-        category = "All Menu",
+        category = "All Products",
         search,
         page = 1,
         limit = 20,
@@ -30,10 +30,10 @@ export class ProductController {
       // Build query
       const query: any = {
         vendorId,
-        isAvailable: available === "true",
+        isAvailable: available === true,
       };
 
-      if (category !== "All Menu") {
+      if (category !== "All Products") {
         query.category = category;
       }
 
@@ -72,7 +72,7 @@ export class ProductController {
       ]);
 
       const categories: ProductCategory[] = [
-        { name: "All Menu", itemCount: total },
+        { name: "All Products", itemCount: total },
         ...categoryStats.map((stat) => ({
           name: stat._id,
           itemCount: stat.count,

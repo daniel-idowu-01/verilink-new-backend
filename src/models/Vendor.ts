@@ -25,20 +25,6 @@ const vendorSchema = new Schema<IVendor>(
       type: String,
       required: true,
     },
-    contactPerson: {
-      type: String,
-      required: true,
-    },
-    contactEmail: {
-      type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
-    },
-    contactPhone: {
-      type: String,
-      required: true,
-    },
     website: {
       type: String,
     },
@@ -63,13 +49,13 @@ const vendorSchema = new Schema<IVendor>(
       enum: ["pending", "verified", "rejected"],
       default: "pending",
     },
-    kycDocuments: [
-      {
-        documentType: { type: String, required: true },
-        documentUrl: { type: String, required: true },
-        uploadedAt: { type: Date, default: Date.now },
-      },
-    ],
+    // kycDocuments: [
+    //   {
+    //     documentType: { type: String, required: true },
+    //     documentUrl: { type: String, required: true },
+    //     uploadedAt: { type: Date, default: Date.now },
+    //   },
+    // ],
     stores: [
       {
         type: Schema.Types.ObjectId,

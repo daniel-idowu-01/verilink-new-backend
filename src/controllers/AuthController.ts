@@ -125,15 +125,22 @@ export class AuthController {
         userAgent,
       });
 
+      logger.info("Vendor registered as user");
+      logger.info("Vendor registration...");
+
       const vendor = await VendorService.createVendor({
-        userId: user._id,
         businessName,
         businessType,
-        registrationNumber: vendorData.registrationNumber,
-        taxId: vendorData.taxId,
+        businessRegistrationNumber: vendorData.registrationNumber,
         businessAddress: vendorData.businessAddress,
-        contactPerson: `${user.firstName} ${user.lastName}`,
+        userId: user.id,
+        taxIdentificationNumber: vendorData.taxId,
       });
+      logger.info("Vendor successfully registered");
+
+      if (!vendor) {
+        throw new InternalServerError("Vendor registration failed");
+      }
 
       // Initiate KYC
       // await KYCService.initiateVerification({
@@ -143,14 +150,14 @@ export class AuthController {
       // });
 
       // Send verification email
-      const verificationToken = user.generateEmailVerificationToken();
-      await EmailService.sendVendorWelcomeEmail({
-        email: user.email,
-        name: `${user.firstName} ${user.lastName}`,
-        businessName: vendor.businessName,
-        verificationToken,
-        kycRequirements: ["CAC certificate", "Tax clearance", "Valid ID"],
-      });
+      // const verificationToken = user.generateEmailVerificationToken();
+      // await EmailService.sendVendorWelcomeEmail({
+      //   email: user.email,
+      //   name: `${user.firstName} ${user.lastName}`,
+      //   businessName: vendor.businessName,
+      //   verificationToken,
+      //   kycRequirements: ["CAC certificate", "Tax clearance", "Valid ID"],
+      // });
 
       ApiResponse.created(
         res,

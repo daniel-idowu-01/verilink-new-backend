@@ -13,9 +13,6 @@ export interface IVendor extends Document {
   businessRegistrationNumber: string;
   taxIdentificationNumber?: string;
   businessAddress: string;
-  contactPerson: string;
-  contactEmail: string;
-  contactPhone: string;
   website?: string;
   logoUrl?: string;
   description?: string;

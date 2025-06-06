@@ -1,6 +1,5 @@
-import logger from "../utils/logger";
 import { Vendor } from "../models/Vendor";
-import { NotFoundError, BadRequestError } from "../utils/errors";
+import { BadRequestError } from "../utils/errors";
 
 export class VendorService {
   async createVendor(vendorData: {
@@ -22,7 +21,6 @@ export class VendorService {
       ...vendorData,
       approved: false,
     });
-
     return vendor.save();
   }
 }

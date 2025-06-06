@@ -1,7 +1,7 @@
 import { UserService } from "./UserService";
 import { EmailService } from "./EmailService";
 import { VendorService } from "./VendorService";
-import { KYCService } from "./KycService";
+import { KYCService } from "./KYCService";
 
 const userService = new UserService();
 const emailService = new EmailService();

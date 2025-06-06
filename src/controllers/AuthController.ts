@@ -1,4 +1,5 @@
 import logger from "../utils/logger";
+import { User } from "../models/User";
 import { config } from "../config/config";
 import { setSecureCookies } from "../utils/helpers";
 import { ApiResponse } from "../middlewares/responseHandler";
@@ -141,6 +142,10 @@ export class AuthController {
       if (!vendor) {
         throw new InternalServerError("Vendor registration failed");
       }
+
+      await UserService.updateUserById(user.id, {
+        vendorId: vendor.id,
+      });
 
       // Initiate KYC
       // await KYCService.initiateVerification({

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { config } from "../config/config";
+import { Vendor } from "../models/Vendor";
 import { UserService } from "../services";
 import { UserRole, UserStatus } from "../models/interfaces/IUser";
 import { UnauthorizedError, ForbiddenError } from "../utils/errors";
@@ -39,15 +40,11 @@ export const authMiddleware = async (
       id: string;
       email: string;
       roles: UserRole[];
-    };
-
-    req.user = decoded as {
-      id: string;
-      email: string;
-      roles: UserRole[];
-      vendorId?: string;
+      vendorId: string;
       status: UserStatus;
     };
+
+    req.user = decoded;
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {

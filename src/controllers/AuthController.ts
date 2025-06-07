@@ -61,7 +61,7 @@ export class AuthController {
       newUser.lastVerificationEmailSent = new Date();
       await newUser.save();
 
-      if (config.NODE_ENV === "production") {
+      if (config.NODE_ENV !== "production") {
         await EmailService.sendEmail({
           from: '"Verilink" <no-reply@verilink.com>',
           to: email,
@@ -155,14 +155,14 @@ export class AuthController {
       // });
 
       // Send verification email
-      // const verificationToken = user.generateEmailVerificationToken();
-      // await EmailService.sendVendorWelcomeEmail({
-      //   email: user.email,
-      //   name: `${user.firstName} ${user.lastName}`,
-      //   businessName: vendor.businessName,
-      //   verificationToken,
-      //   kycRequirements: ["CAC certificate", "Tax clearance", "Valid ID"],
-      // });
+      const verificationToken = user.generateEmailVerificationToken();
+      await EmailService.sendVendorWelcomeEmail({
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        businessName: vendor.businessName,
+        verificationToken,
+        kycRequirements: ["CAC certificate", "Tax clearance", "Valid ID"],
+      });
 
       ApiResponse.created(
         res,

@@ -1,9 +1,7 @@
 import dotenv from "dotenv";
-import nodemailer, { Transporter } from "nodemailer";
+import nodemailer, { Transporter, TransportOptions } from "nodemailer";
 
 dotenv.config();
-
-import { TransportOptions } from 'nodemailer';
 
 interface SMTPConfig extends TransportOptions {
   service: string;

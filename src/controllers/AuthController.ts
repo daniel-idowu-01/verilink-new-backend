@@ -61,7 +61,7 @@ export class AuthController {
       newUser.lastVerificationEmailSent = new Date();
       await newUser.save();
 
-      if (config.NODE_ENV !== "production") {
+      if (config.NODE_ENV === "production") {
         await EmailService.sendEmail({
           from: '"Verilink" <no-reply@verilink.com>',
           to: email,
@@ -156,12 +156,33 @@ export class AuthController {
 
       // Send verification email
       const verificationToken = user.generateEmailVerificationToken();
-      await EmailService.sendVendorWelcomeEmail({
-        email: user.email,
-        name: `${user.firstName} ${user.lastName}`,
-        businessName: vendor.businessName,
-        verificationToken,
-        kycRequirements: ["CAC certificate", "Tax clearance", "Valid ID"],
+
+      const kycRequirements = ["CAC certificate", "Tax clearance", "Valid ID"];
+
+      await EmailService.sendEmail({
+        from: '"Verilink" <no-reply@verilink.com>',
+        to: email,
+        subject: `Action Required: Complete Your Verilink Vendor Setup`,
+        html: `
+        <h1>Welcome to Verilink, ${user.name}!</h1>
+        <p>Your business <strong>${
+          vendor.businessName
+        }</strong> has been registered.</p>
+        
+        <h3>Next Steps:</h3>
+        <ol>
+          <li>Verify your email: <a href="${
+            config.BASE_URL
+          }/verify-email?token=${verificationToken}">Click here</a></li>
+          <li>Complete KYC by uploading:
+            <ul>
+              ${kycRequirements.map((req) => `<li>${req}</li>`).join("")}
+            </ul>
+          </li>
+        </ol>
+  
+        <p>For Nigerian businesses, CAC verification must be completed within 7 days.</p>
+      `,
       });
 
       ApiResponse.created(
